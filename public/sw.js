@@ -11,7 +11,15 @@ const urlsToCache = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(urlsToCache);
+      // Try to add each URL, but don't fail if some don't exist
+      return Promise.allSettled(
+        urlsToCache.map(url => 
+          cache.add(url).catch(err => {
+            console.warn(`Failed to cache ${url}:`, err);
+            return null;
+          })
+        )
+      );
     })
   );
   self.skipWaiting();
@@ -37,20 +45,34 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', (event) => {
-  // For JavaScript and CSS files, always try network first, then cache
-  if (event.request.url.includes('.js') || event.request.url.includes('.css')) {
-    event.respondWith(
-      fetch(event.request).catch(() => {
-        return caches.match(event.request);
-      })
-    );
-  } else {
-    // For other resources, try cache first, then network
-    event.respondWith(
-      caches.match(event.request).then((response) => {
-        return response || fetch(event.request);
-      })
-    );
+  // Skip non-GET requests
+  if (event.request.method !== 'GET') {
+    return;
   }
+  
+  // Skip chrome-extension and other non-http requests
+  if (!event.request.url.startsWith('http')) {
+    return;
+  }
+  
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        // Only cache successful responses
+        if (response.status === 200) {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return response;
+      })
+      .catch(() => {
+        // If network fails, try cache
+        return caches.match(event.request).then((cachedResponse) => {
+          return cachedResponse || new Response('Not found', { status: 404 });
+        });
+      })
+  );
 });
 
