@@ -5,6 +5,21 @@ import { LanguageSelector } from "../ui/LanguageSelector";
 import { DeckTags } from "../ui/DeckTags";
 import { getAllCards, getCardText, type DeckTag, type IntensityLevel } from "../../data/cards";
 
+// Map deck tags to translation keys (same as DeckTags component)
+const deckTagMap: Record<DeckTag, string> = {
+  all: "all",
+  nostalgia: "nostalgia",
+  love: "love",
+  identity: "identity",
+  deep_waters: "deepWaters",
+  shadow: "shadows",
+  philosophy: "philosophy",
+  story: "story",
+  couple: "couple",
+  group: "group",
+  closing: "closing",
+};
+
 export const SinglePlayerScreen: React.FC = () => {
   const { setScreen, voteCard, getCardVotes, isCardHidden } = useSessionStore();
   const { t, language } = useLanguageStore();
@@ -140,7 +155,8 @@ export const SinglePlayerScreen: React.FC = () => {
             {allDeckTags.map((tag) => {
               const isAllSelected = selectedDeckTags.has("all");
               const isSelected = selectedDeckTags.has(tag) || (isAllSelected && tag !== "all");
-              const label = tag === "all" ? t.decks.all : t.decks[tag as keyof typeof t.decks] || tag;
+              const translationKey = deckTagMap[tag] || tag;
+              const label = t.decks[translationKey as keyof typeof t.decks] || tag;
               return (
                 <button
                   key={tag}
