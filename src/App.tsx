@@ -8,6 +8,7 @@ import { SessionSetupScreen } from "./components/screens/SessionSetupScreen";
 import { MainGameScreen } from "./components/screens/MainGameScreen";
 import { ClosingRitualScreen } from "./components/screens/ClosingRitualScreen";
 import { SinglePlayerScreen } from "./components/screens/SinglePlayerScreen";
+import { InstallPrompt } from "./components/ui/InstallPrompt";
 import { resetVotes, resetGeneratedCards } from "./data/cards";
 
 export default function App() {
@@ -32,6 +33,11 @@ export default function App() {
     return <ClosingRitualScreen />;
   if (screen === "SINGLE_PLAYER") return <SinglePlayerScreen />;
 
-  return <WelcomeScreen />;
+  return (
+    <>
+      <WelcomeScreen />
+      <InstallPrompt />
+    </>
+  );
 }
 
