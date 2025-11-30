@@ -87,6 +87,9 @@ interface SessionStore extends SessionState {
   getAverageRating: (cardId: string) => number | null;
   getEligiblePlayers: () => Player[];
   syncGameState: () => void; // Sync state with other players
+  voteCard: (cardId: string, vote: "up" | "down") => void;
+  getCardVotes: (cardId: string) => { up: number; down: number };
+  isCardHidden: (cardId: string) => boolean;
 }
 
 const defaultSettings: SessionSettings = {
@@ -330,7 +333,7 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
     }
   },
 
-  voteCard: (cardId, vote) => {
+  voteCard: (cardId: string, vote: "up" | "down") => {
     const newVote: CardVote = {
       cardId,
       vote,
@@ -410,7 +413,7 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
     }
   },
 
-  getCardVotes: (cardId) => {
+  getCardVotes: (cardId: string) => {
     try {
       const stored = localStorage.getItem("all-cards-votes");
       if (!stored) return { up: 0, down: 0 };
@@ -425,7 +428,7 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
     }
   },
 
-  isCardHidden: (cardId) => {
+  isCardHidden: (cardId: string) => {
     // Hide cards with 1 or more downvotes (replaced with better versions)
     const DOWNVOTE_THRESHOLD = 1;
     try {
@@ -536,7 +539,6 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
       if (!stored) return false;
 
       const gameData = JSON.parse(stored);
-      const state = get();
       
       // Add player to the game
       const newPlayer: Player = {

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useSessionStore } from "../../state/sessionStore";
 import { useLanguageStore } from "../../i18n/languageStore";
 import { LanguageSelector } from "../ui/LanguageSelector";

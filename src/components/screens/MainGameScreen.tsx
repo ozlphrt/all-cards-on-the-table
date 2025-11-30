@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import { useSessionStore } from "../../state/sessionStore";
 import { useLanguageStore } from "../../i18n/languageStore";
 import { LanguageSelector } from "../ui/LanguageSelector";
-import { QuestionRating } from "../ui/QuestionRating";
 import { DeckTags } from "../ui/DeckTags";
 import { ALL_CARDS, getCardText } from "../../data/cards";
 
@@ -10,20 +9,12 @@ export const MainGameScreen: React.FC = () => {
   const {
     currentCandidateCards,
     currentSelectedCard,
-    currentScreen,
-    players,
-    answeredInCurrentCycle,
-    currentAnsweringPlayerId,
     pickNewCards,
     selectCard,
-    selectAnsweringPlayer,
     markAnswered,
     skipCurrentSet,
-    toggleFavorite,
     rateCard,
     getCardRating,
-    getAverageRating,
-    getEligiblePlayers,
     setScreen,
   } = useSessionStore();
 

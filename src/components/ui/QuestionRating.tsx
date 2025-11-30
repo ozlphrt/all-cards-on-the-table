@@ -8,7 +8,6 @@ interface QuestionRatingProps {
 }
 
 export const QuestionRating: React.FC<QuestionRatingProps> = ({
-  cardId,
   currentRating,
   averageRating,
   onRate,

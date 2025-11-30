@@ -3,7 +3,7 @@ import { useSessionStore } from "../../state/sessionStore";
 import { useLanguageStore } from "../../i18n/languageStore";
 import { LanguageSelector } from "../ui/LanguageSelector";
 import { DeckTags } from "../ui/DeckTags";
-import { getAllCards, getCardText, ALL_CARDS, type DeckTag, type IntensityLevel } from "../../data/cards";
+import { getAllCards, getCardText, type DeckTag, type IntensityLevel } from "../../data/cards";
 
 export const SinglePlayerScreen: React.FC = () => {
   const { setScreen, voteCard, getCardVotes, isCardHidden } = useSessionStore();

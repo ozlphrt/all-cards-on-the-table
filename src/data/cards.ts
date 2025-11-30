@@ -91,14 +91,12 @@ async function translateText(text: string, targetLang: string): Promise<string> 
 }
 
 // Generate similar questions based on an upvoted card
-export async function generateSimilarQuestion(upvotedCard: Card, variationIndex: number = 0, currentLanguage: string = "en"): Promise<Card> {
+export async function generateSimilarQuestion(upvotedCard: Card, variationIndex: number = 0, _currentLanguage: string = "en"): Promise<Card> {
   // Generate a new ID with variation index and additional randomness to ensure uniqueness
   const timestamp = Date.now();
   const random1 = Math.random().toString(36).substr(2, 9);
   const random2 = Math.random().toString(36).substr(2, 5);
   const newId = `gen-${timestamp}-${variationIndex}-${random1}-${random2}`;
-  
-  const baseText = upvotedCard.text.en.toLowerCase();
   
   // Create variations based on the original question's structure and theme
   const variations: string[] = [];
@@ -111,8 +109,6 @@ export async function generateSimilarQuestion(upvotedCard: Card, variationIndex:
   const hasDeepWaters = upvotedCard.themes.includes("deep_waters");
   const hasShadow = upvotedCard.themes.includes("shadow");
   const hasPhilosophy = upvotedCard.themes.includes("philosophy");
-  const hasStory = upvotedCard.themes.includes("story");
-  
   // Generate standalone questions based on themes and intensity level
   if (upvotedCard.intensity_level === 1) {
     // Level 1: Warm, safe questions
@@ -416,11 +412,9 @@ export async function generateSimilarQuestion(upvotedCard: Card, variationIndex:
     attempts++;
   }
   
-  // If we still have a duplicate after all attempts, generate a completely new one
-  if (attempts >= maxAttempts) {
-    // Create a more distinct variation by modifying the question structure
-    const baseWords = selectedVariation.split(' ');
-    // Try to create a variation by changing key words
+    // If we still have a duplicate after all attempts, generate a completely new one
+    if (attempts >= maxAttempts) {
+      // Try to create a variation by changing key words
     selectedVariation = selectedVariation
       .replace(/What/g, 'Which')
       .replace(/When/g, 'At what moment')
