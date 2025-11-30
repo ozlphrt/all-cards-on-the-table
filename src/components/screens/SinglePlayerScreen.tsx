@@ -10,7 +10,7 @@ export const SinglePlayerScreen: React.FC = () => {
   const { t, language } = useLanguageStore();
 
   const [selectedDeckTags, setSelectedDeckTags] = useState<Set<DeckTag>>(new Set(["all"]));
-  const [selectedIntensities, setSelectedIntensities] = useState<Set<IntensityLevel>>(new Set([4, 5]));
+  const [selectedIntensities, setSelectedIntensities] = useState<Set<IntensityLevel>>(new Set([1, 2, 3, 4, 5]));
   const [searchQuery, setSearchQuery] = useState("");
   const [voteUpdateTrigger, setVoteUpdateTrigger] = useState(0);
 
