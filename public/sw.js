@@ -1,5 +1,5 @@
 // Service Worker for All Cards on the Table
-const CACHE_NAME = 'all-cards-v1';
+const CACHE_NAME = 'all-cards-v2';
 const BASE_PATH = '/all-cards-on-the-table';
 const urlsToCache = [
   `${BASE_PATH}/`,
