@@ -5,6 +5,6 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   // GitHub Pages base path - always use repo name for production builds
-  base: process.env.GITHUB_ACTIONS ? '/all-cards-on-the-table/' : '/',
+  base: process.env.NODE_ENV === 'production' ? '/all-cards-on-the-table/' : '/',
 })
 
