@@ -21,7 +21,7 @@ const deckTagMap: Record<DeckTag, string> = {
 };
 
 export const SinglePlayerScreen: React.FC = () => {
-  const { setScreen, voteCard, getCardVotes, isCardHidden } = useSessionStore();
+  const { getCardVotes, isCardHidden } = useSessionStore();
   const { t, language } = useLanguageStore();
 
   const [selectedDeckTags, setSelectedDeckTags] = useState<Set<DeckTag>>(new Set(["all"]));
@@ -46,7 +46,7 @@ export const SinglePlayerScreen: React.FC = () => {
     const allCards = getAllCards();
     const originalCount = allCards.filter(c => !c.id.startsWith('gen-')).length;
     const generatedCount = allCards.filter(c => c.id.startsWith('gen-')).length;
-    
+
     const filtered = allCards.filter((card) => {
       // Filter out cards with too many downvotes
       if (isCardHidden(card.id)) return false;
@@ -67,13 +67,13 @@ export const SinglePlayerScreen: React.FC = () => {
 
       return true;
     });
-    
+
     const filteredOriginal = filtered.filter(c => !c.id.startsWith('gen-')).length;
     const filteredGenerated = filtered.filter(c => c.id.startsWith('gen-')).length;
-    
+
     console.log(`filteredCards: ${allCards.length} total (${originalCount} original + ${generatedCount} generated) → ${filtered.length} visible (${filteredOriginal} original + ${filteredGenerated} generated), trigger=${voteUpdateTrigger}`);
     console.log(`  Filters: intensities=${Array.from(selectedIntensities).join(',')}, decks=${Array.from(selectedDeckTags).join(',')}, search="${searchQuery}"`);
-    
+
     return filtered;
   }, [selectedDeckTags, selectedIntensities, searchQuery, language, isCardHidden, voteUpdateTrigger]);
 
@@ -102,30 +102,35 @@ export const SinglePlayerScreen: React.FC = () => {
     }
   };
 
-  const toggleIntensity = (level: IntensityLevel) => {
+  const toggleIntensityGroup = (group: { id: string, levels: number[] }) => {
     const newSet = new Set(selectedIntensities);
-    if (newSet.has(level)) {
-      // Don't allow removing all intensities
-      if (newSet.size === 1) return;
-      newSet.delete(level);
+    const isActive = group.levels.every(l => newSet.has(l as IntensityLevel));
+
+    if (isActive) {
+      // Remove all levels in group
+      group.levels.forEach(l => newSet.delete(l as IntensityLevel));
     } else {
-      newSet.add(level);
+      // Add all levels in group
+      group.levels.forEach(l => newSet.add(l as IntensityLevel));
     }
+
+    // Don't allow empty selection
+    if (newSet.size === 0) return;
     setSelectedIntensities(newSet);
+  };
+
+  const getIntensityInfo = (level: number) => {
+    if (level <= 2) return { label: t.setup.intensityLevels.warm, color: "text-[#F4C879]" };
+    if (level === 3) return { label: t.setup.intensityLevels.deep, color: "text-[#79C8F4]" };
+    return { label: t.setup.intensityLevels.shadows, color: "text-[#C6B9A5]" };
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-[radial-gradient(circle_at_top,_#241824,_#050509)] text-[#F7F2E9]">
       {/* Top bar */}
       <div className="px-4 py-3 border-b border-[rgba(255,255,255,0.08)] bg-[rgba(10,10,18,0.4)] backdrop-blur-[12px] relative z-50">
-        {/* Line 1: Back button and flag */}
-        <div className="flex items-center justify-between mb-2">
-          <button
-            onClick={() => setScreen("WELCOME")}
-            className="text-xs text-[#C6B9A5] hover:text-[#F7F2E9] transition-colors"
-          >
-            ← {t.setup.back}
-          </button>
+        {/* Line 1: Flag/Language Selector only */}
+        <div className="flex items-center justify-end mb-2">
           <LanguageSelector />
         </div>
         {/* Line 2: Title and subtitle */}
@@ -161,11 +166,10 @@ export const SinglePlayerScreen: React.FC = () => {
                 <button
                   key={tag}
                   onClick={() => toggleDeckTag(tag)}
-                  className={`px-3 py-1.5 rounded text-xs transition-all ${
-                    isSelected
-                      ? "bg-[rgba(208,169,107,0.3)] text-[#F4C879] border border-[rgba(208,169,107,0.5)]"
-                      : "bg-[rgba(15,15,30,0.5)] text-[#8B8172] border border-[rgba(255,255,255,0.1)] hover:border-[rgba(255,255,255,0.2)]"
-                  }`}
+                  className={`px-3 py-1.5 rounded text-xs transition-all ${isSelected
+                    ? "bg-[rgba(208,169,107,0.3)] text-[#F4C879] border border-[rgba(208,169,107,0.5)]"
+                    : "bg-[rgba(15,15,30,0.5)] text-[#8B8172] border border-[rgba(255,255,255,0.1)] hover:border-[rgba(255,255,255,0.2)]"
+                    }`}
                 >
                   {label}
                 </button>
@@ -176,30 +180,34 @@ export const SinglePlayerScreen: React.FC = () => {
 
         {/* Intensity */}
         <div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-2">
             <p className="text-sm text-[#C6B9A5]">{t.setup.intensity}</p>
-            <div className="flex items-center -space-x-2">
-              {[1, 2, 3, 4, 5].map((level) => {
-                const isSelected = selectedIntensities.has(level as IntensityLevel);
+            <div className="flex flex-wrap gap-2">
+              {[
+                { id: "warm", levels: [1, 2], label: t.setup.intensityLevels.warm },
+                { id: "deep", levels: [3], label: t.setup.intensityLevels.deep },
+                { id: "shadows", levels: [4, 5], label: t.setup.intensityLevels.shadows },
+              ].map((group) => {
+                const isActive = group.levels.every(l => selectedIntensities.has(l as IntensityLevel));
                 return (
                   <button
-                    key={level}
-                    onClick={() => toggleIntensity(level as IntensityLevel)}
-                    className={`text-2xl transition-all relative z-10 hover:z-20 ${
-                      isSelected 
-                        ? "opacity-100 scale-100 drop-shadow-[0_0_12px_rgba(244,200,121,0.9),0_0_24px_rgba(244,200,121,0.5)]" 
-                        : "opacity-30 scale-90"
-                    } hover:scale-110 hover:drop-shadow-[0_0_12px_rgba(244,200,121,0.6),0_0_24px_rgba(244,200,121,0.3)]`}
-                    title={`Intensity ${level}`}
+                    key={group.id}
+                    onClick={() => toggleIntensityGroup(group)}
+                    className={`px-3 py-1.5 rounded-xl text-xs flex items-center gap-2 transition-all ${isActive
+                      ? "bg-[rgba(208,169,107,0.3)] text-[#F4C879] border border-[rgba(208,169,107,0.5)] shadow-[0_0_10px_rgba(208,169,107,0.1)]"
+                      : "bg-[rgba(15,15,30,0.5)] text-[#8B8172] border border-[rgba(255,255,255,0.1)] opacity-60"
+                      }`}
                   >
-                    🔥
+                    {group.label}
                   </button>
                 );
               })}
+              <div className="ml-auto self-center">
+                <span className="text-xs text-[#8B8172]">
+                  {filteredCards.length} {t.singlePlayer.cardsFound}
+                </span>
+              </div>
             </div>
-            <span className="text-sm text-[#8B8172]">
-              {filteredCards.length} {t.singlePlayer.cardsFound}
-            </span>
           </div>
         </div>
       </div>
@@ -218,81 +226,23 @@ export const SinglePlayerScreen: React.FC = () => {
               return (
                 <div
                   key={card.id}
-                  className={`rounded-3xl backdrop-blur-[18px] border shadow-xl px-5 py-4 transition-all flex flex-col ${
-                    isAnswered
-                      ? "opacity-40 border-[rgba(255,255,255,0.08)] bg-[rgba(25,25,45,0.5)]"
-                      : "border-[rgba(255,255,255,0.15)] bg-[rgba(25,25,45,0.75)] hover:scale-[1.02] hover:border-[rgba(208,169,107,0.5)] hover:bg-[rgba(30,30,50,0.85)]"
-                  }`}
+                  className={`rounded-3xl backdrop-blur-[18px] border shadow-xl px-5 py-4 transition-all flex flex-col ${isAnswered
+                    ? "opacity-40 border-[rgba(255,255,255,0.08)] bg-[rgba(25,25,45,0.5)]"
+                    : "border-[rgba(255,255,255,0.15)] bg-[rgba(25,25,45,0.75)] hover:scale-[1.02] hover:border-[rgba(208,169,107,0.5)] hover:bg-[rgba(30,30,50,0.85)]"
+                    }`}
                 >
                   <div className="flex items-center gap-3 mb-3 flex-wrap">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-[#8B8172] leading-none">
-                        {Array.from({ length: card.intensity_level }, (_, i) => (
-                          <span key={i} className="inline-block -mr-2">🔥</span>
-                        ))}
+                    <div className="flex items-center gap-1.5">
+                      <span className={`text-[10px] uppercase tracking-wider font-bold ${getIntensityInfo(card.intensity_level).color}`}>
+                        {getIntensityInfo(card.intensity_level).label}
                       </span>
                     </div>
                     <DeckTags deckTags={card.deck_tags} />
                   </div>
 
-                  <p className="text-xl leading-tight font-medium text-[#E8DDD0] flex-1 mb-4">
+                  <p className="text-xl leading-tight font-medium text-[#E8DDD0] flex-1">
                     {getCardText(card, language)}
                   </p>
-
-                  {/* Thumbs up/down buttons */}
-                  <div className="flex items-center justify-end gap-2 pt-3 border-t border-[rgba(255,255,255,0.1)]">
-                    <button
-                      onClick={() => {
-                        console.log(`Thumbs up clicked for card: ${card.id}`);
-                        voteCard(card.id, "up");
-                        // Force refresh to show newly generated cards
-                        // Use multiple timeouts to catch cards as they're generated
-                        setTimeout(() => {
-                          console.log("Triggering UI update (500ms)");
-                          setVoteUpdateTrigger((prev) => prev + 1);
-                        }, 500);
-                        setTimeout(() => {
-                          console.log("Triggering UI update (1500ms)");
-                          setVoteUpdateTrigger((prev) => prev + 1);
-                        }, 1500);
-                        setTimeout(() => {
-                          console.log("Triggering UI update (3000ms)");
-                          setVoteUpdateTrigger((prev) => prev + 1);
-                        }, 3000);
-                        setTimeout(() => {
-                          console.log("Triggering UI update (5000ms)");
-                          setVoteUpdateTrigger((prev) => prev + 1);
-                        }, 5000);
-                      }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-[rgba(15,15,30,0.5)] hover:bg-[rgba(208,169,107,0.2)] border border-[rgba(255,255,255,0.1)] hover:border-[rgba(208,169,107,0.3)] transition-all text-[#8B8172] hover:text-[#F4C879]"
-                      title="Thumbs up"
-                    >
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M7 10v12"/>
-                        <path d="M15 5.88L14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z"/>
-                      </svg>
-                      {votes.up > 0 && (
-                        <span className="text-xs">{votes.up}</span>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => {
-                        voteCard(card.id, "down");
-                        setVoteUpdateTrigger(prev => prev + 1);
-                        setVoteUpdateTrigger((prev) => prev + 1);
-                      }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-[rgba(15,15,30,0.5)] hover:bg-[rgba(200,100,100,0.2)] border border-[rgba(255,255,255,0.1)] hover:border-[rgba(200,100,100,0.3)] transition-all text-[#8B8172] hover:text-[#E88]"
-                      title="Thumbs down"
-                    >
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M17 14V2"/>
-                        <path d="M9 18.12L10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z"/>
-                      </svg>
-                      {votes.down > 0 && (
-                        <span className="text-xs">{votes.down}</span>
-                      )}
-                    </button>
-                  </div>
                 </div>
               );
             })}

@@ -97,10 +97,10 @@ export async function generateSimilarQuestion(upvotedCard: Card, variationIndex:
   const random1 = Math.random().toString(36).substr(2, 9);
   const random2 = Math.random().toString(36).substr(2, 5);
   const newId = `gen-${timestamp}-${variationIndex}-${random1}-${random2}`;
-  
+
   // Create variations based on the original question's structure and theme
   const variations: string[] = [];
-  
+
   // Generate standalone questions based on themes and intensity
   // Analyze the original question's themes to create similar but independent questions
   const hasNostalgia = upvotedCard.themes.includes("nostalgia");
@@ -163,7 +163,7 @@ export async function generateSimilarQuestion(upvotedCard: Card, variationIndex:
     } else if (hasPhilosophy) {
       variations.push(
         "What belief have you held onto despite others questioning it?",
-        "How has your perspective on what matters most shifted over time?",
+        "How has your perspective on what matter most shifted over time?",
         "What question about life do you find yourself returning to?",
         "What assumption about how the world works have you had to reconsider?",
         "How has your understanding of what it means to live well evolved?",
@@ -245,7 +245,7 @@ export async function generateSimilarQuestion(upvotedCard: Card, variationIndex:
       "What relationship shaped you in ways that took years to fully comprehend?"
     );
   }
-  
+
   // If no variations were generated, create generic standalone questions based on intensity
   if (variations.length === 0) {
     if (upvotedCard.intensity_level <= 2) {
@@ -264,31 +264,31 @@ export async function generateSimilarQuestion(upvotedCard: Card, variationIndex:
       );
     }
   }
-  
+
   // Ensure we have variations
   if (variations.length === 0) {
     variations.push("What moment from your past do you find yourself returning to in your thoughts?");
   }
-  
+
   // Shuffle variations array to ensure different questions each time
   const shuffled = [...variations].sort(() => Math.random() - 0.5);
-  
+
   // Get all existing questions to check for duplicates
   const allExistingCards = getAllCards();
   const existingTexts = allExistingCards.map(c => c.text.en.toLowerCase().trim());
-  
+
   // Filter out variations that are too similar to existing questions BEFORE selection
   const uniqueVariations = shuffled.filter(variation => {
     const variationLower = variation.toLowerCase().trim();
     return !existingTexts.some(existingText => {
       // Quick check: exact match
       if (variationLower === existingText) return true;
-      
+
       // Check for same opening (first 6 words)
       const variationStart = variationLower.split(/\s+/).slice(0, 6).join(' ');
       const existingStart = existingText.split(/\s+/).slice(0, 6).join(' ');
       if (variationStart === existingStart) return true;
-      
+
       // Check word overlap
       const variationWords = variationLower.split(/\s+/).filter(w => w.length > 3);
       const existingWords = existingText.split(/\s+/).filter(w => w.length > 3);
@@ -297,11 +297,11 @@ export async function generateSimilarQuestion(upvotedCard: Card, variationIndex:
         const similarity = commonWords.length / Math.max(variationWords.length, existingWords.length);
         if (similarity > 0.5) return true;
       }
-      
+
       return false;
     });
   });
-  
+
   // If all variations are duplicates, use generic fallbacks
   const finalVariations = uniqueVariations.length > 0 ? uniqueVariations : [
     "What moment from your life do you find yourself reflecting on most often?",
@@ -313,19 +313,19 @@ export async function generateSimilarQuestion(upvotedCard: Card, variationIndex:
     "How has your relationship with yourself changed over the years?",
     "What insight about yourself came to you when you least expected it?"
   ];
-  
+
   // Re-shuffle the unique variations
   const finalShuffled = [...finalVariations].sort(() => Math.random() - 0.5);
-  
+
   // Use variation index to select from final shuffled array
   // This ensures different questions even if called multiple times quickly
   const index = variationIndex % finalShuffled.length;
   let selectedVariation = finalShuffled[index];
-  
+
   // Ensure the generated question is different from all existing questions
   let attempts = 0;
   const maxAttempts = finalShuffled.length * 3; // More attempts since we pre-filtered
-  
+
   while (attempts < maxAttempts) {
     // Check if this variation is too similar to any existing question
     const isDuplicate = existingTexts.some(existingText => {
@@ -333,11 +333,11 @@ export async function generateSimilarQuestion(upvotedCard: Card, variationIndex:
       if (selectedVariation.toLowerCase().trim() === existingText) {
         return true;
       }
-      
+
       // Check for semantic similarity - same key concepts
       const selectedLower = selectedVariation.toLowerCase();
       const existingLower = existingText;
-      
+
       // Check for very similar phrasing (same structure, same key words)
       const keyPhrases = [
         /version of (you|yourself).*memories/i,
@@ -347,7 +347,7 @@ export async function generateSimilarQuestion(upvotedCard: Card, variationIndex:
         /relationship.*influenced.*years later/i,
         /kept to yourself.*uncertain/i
       ];
-      
+
       // If both contain the same key phrase pattern, they're too similar
       for (const pattern of keyPhrases) {
         const selectedMatch = selectedLower.match(pattern);
@@ -356,7 +356,7 @@ export async function generateSimilarQuestion(upvotedCard: Card, variationIndex:
           return true; // If both match the pattern, they're too similar
         }
       }
-      
+
       // Special check for "memories" + "differ" + "know yourself" pattern (very specific duplicate)
       const hasMemoriesDifferPattern = (text: string) => {
         return /memories/i.test(text) && /differ/i.test(text) && /know.*yourself/i.test(text);
@@ -364,7 +364,7 @@ export async function generateSimilarQuestion(upvotedCard: Card, variationIndex:
       if (hasMemoriesDifferPattern(selectedLower) && hasMemoriesDifferPattern(existingLower)) {
         return true;
       }
-      
+
       // Check for high word overlap (more than 50% word overlap - much stricter)
       const selectedWords = selectedLower.split(/\s+/).filter(w => w.length > 3); // Only meaningful words
       const existingWords = existingLower.split(/\s+/).filter(w => w.length > 3);
@@ -375,15 +375,15 @@ export async function generateSimilarQuestion(upvotedCard: Card, variationIndex:
           return true;
         }
       }
-      
+
       // Check for same question structure with same key words
-      const selectedKeyWords = selectedWords.filter(w => 
+      const selectedKeyWords = selectedWords.filter(w =>
         !['what', 'when', 'where', 'how', 'which', 'who', 'why', 'the', 'a', 'an', 'is', 'are', 'was', 'were', 'do', 'does', 'did', 'have', 'has', 'had', 'you', 'your', 'yourself', 'your', 'to', 'from', 'in', 'on', 'at', 'for', 'with', 'about', 'that', 'this', 'and', 'or', 'but', 'if', 'most', 'more', 'than', 'been', 'being', 'would', 'could', 'should'].includes(w)
       );
-      const existingKeyWords = existingWords.filter(w => 
+      const existingKeyWords = existingWords.filter(w =>
         !['what', 'when', 'where', 'how', 'which', 'who', 'why', 'the', 'a', 'an', 'is', 'are', 'was', 'were', 'do', 'does', 'did', 'have', 'has', 'had', 'you', 'your', 'yourself', 'your', 'to', 'from', 'in', 'on', 'at', 'for', 'with', 'about', 'that', 'this', 'and', 'or', 'but', 'if', 'most', 'more', 'than', 'been', 'being', 'would', 'could', 'should'].includes(w)
       );
-      
+
       if (selectedKeyWords.length > 0 && existingKeyWords.length > 0) {
         const keyWordOverlap = selectedKeyWords.filter(w => existingKeyWords.includes(w)).length;
         const keyWordSimilarity = keyWordOverlap / Math.max(selectedKeyWords.length, existingKeyWords.length);
@@ -391,35 +391,35 @@ export async function generateSimilarQuestion(upvotedCard: Card, variationIndex:
           return true;
         }
       }
-      
+
       // Check for same question start (first 5-6 words)
       const selectedStart = selectedLower.split(/\s+/).slice(0, 6).join(' ');
       const existingStart = existingLower.split(/\s+/).slice(0, 6).join(' ');
       if (selectedStart === existingStart) {
         return true; // Same opening is definitely a duplicate
       }
-      
+
       return false;
     });
-    
+
     if (!isDuplicate) {
       break; // Found a unique question
     }
-    
+
     // Try next variation
     const nextIndex = (index + attempts + 1) % finalShuffled.length;
     selectedVariation = finalShuffled[nextIndex];
     attempts++;
   }
-  
-    // If we still have a duplicate after all attempts, generate a completely new one
-    if (attempts >= maxAttempts) {
-      // Try to create a variation by changing key words
+
+  // If we still have a duplicate after all attempts, generate a completely new one
+  if (attempts >= maxAttempts) {
+    // Try to create a variation by changing key words
     selectedVariation = selectedVariation
       .replace(/What/g, 'Which')
       .replace(/When/g, 'At what moment')
       .replace(/How/g, 'In what way');
-    
+
     // Final check - if still too similar, use a generic fallback
     const stillDuplicate = existingTexts.some(existingText => {
       const selectedWords = selectedVariation.toLowerCase().split(/\s+/);
@@ -428,7 +428,7 @@ export async function generateSimilarQuestion(upvotedCard: Card, variationIndex:
       const similarity = commonWords.length / Math.max(selectedWords.length, existingWords.length);
       return similarity > 0.7;
     });
-    
+
     if (stillDuplicate) {
       // Use a completely generic question as last resort
       const genericQuestions = [
@@ -441,17 +441,17 @@ export async function generateSimilarQuestion(upvotedCard: Card, variationIndex:
       selectedVariation = genericQuestions[variationIndex % genericQuestions.length];
     }
   }
-  
+
   // Use the selected variation as-is (it's already a standalone question)
   const newQuestionText = selectedVariation;
-  
+
   // Translate to English and Turkish only
   // Start with English immediately, translate Turkish in background to avoid blocking
   const finalText: Card["text"] = {
     en: newQuestionText,
     tr: newQuestionText, // Placeholder, will be translated in background
   };
-  
+
   // Translate Turkish in background (don't wait for it)
   (async () => {
     try {
@@ -475,7 +475,7 @@ export async function generateSimilarQuestion(upvotedCard: Card, variationIndex:
       console.warn(`Translation failed for card ${newId}, keeping English:`, error);
     }
   })();
-  
+
   return {
     id: newId,
     text: finalText,
@@ -527,15 +527,14 @@ export function resetGeneratedCards(): void {
   }
 }
 
-// Fresh set of questions - rewritten from scratch in Tucci style
-// Sophisticated, elegant, thoughtful - as if asked over dinner with wine
+// Sophisticated, elegant, thoughtful questions - "All Cards on the Table" curated set
 export const ALL_CARDS: Card[] = [
-  // Level 1 - Warm, Safe, Gentle
+  // --- WARM (Levels 1-2) ---
   {
-    id: "L1-001",
+    id: "WARM-01",
     text: {
-      en: "What childhood memory still makes you smile?",
-      tr: "Hangi çocukluk anısı hâlâ seni gülümsetiyor?",
+      en: "What scent or sound instantly transports you to a specific moment from your past?",
+      tr: "Hangi koku veya ses seni anında geçmişindeki belirli bir ana götürüyor?",
     },
     intensity_level: 1,
     themes: ["nostalgia"],
@@ -543,21 +542,10 @@ export const ALL_CARDS: Card[] = [
     deck_tags: ["all", "nostalgia"],
   },
   {
-    id: "L1-002",
+    id: "WARM-02",
     text: {
-      en: "What's your earliest clear memory?",
-      tr: "En erken net hatıran nedir?",
-    },
-    intensity_level: 1,
-    themes: ["nostalgia", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "nostalgia"],
-  },
-  {
-    id: "L1-003",
-    text: {
-      en: "Where did you go to disappear as a child?",
-      tr: "Çocukken kaybolmak için nereye giderdin?",
+      en: "Which childhood ritual or tradition do you find yourself returning to, however secretly?",
+      tr: "Hangi çocukluk ritüeline veya geleneğine, ne kadar gizli de olsa, geri dönerken buluyorsun kendini?",
     },
     intensity_level: 1,
     themes: ["nostalgia"],
@@ -565,32 +553,10 @@ export const ALL_CARDS: Card[] = [
     deck_tags: ["all", "nostalgia"],
   },
   {
-    id: "L1-004",
+    id: "WARM-03",
     text: {
-      en: "What did you lose when you grew up?",
-      tr: "Büyürken neyi kaybettin?",
-    },
-    intensity_level: 1,
-    themes: ["nostalgia", "philosophy"],
-    formats: ["solo"],
-    deck_tags: ["all", "nostalgia", "philosophy"],
-  },
-  {
-    id: "L1-005",
-    text: {
-      en: "What's the smallest thing that's always made you happy?",
-      tr: "Seni her zaman mutlu eden en küçük şey nedir?",
-    },
-    intensity_level: 1,
-    themes: ["identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "identity"],
-  },
-  {
-    id: "L1-006",
-    text: {
-      en: "What did a childhood friend teach you that you still carry?",
-      tr: "Bir çocukluk arkadaşın sana ne öğretti ki hâlâ taşıyorsun?",
+      en: "What detail from a happy memory do you hold onto most vividly?",
+      tr: "Mutlu bir hatıradan hangi detayı en canlı şekilde saklıyorsun?",
     },
     intensity_level: 1,
     themes: ["nostalgia"],
@@ -598,57 +564,32 @@ export const ALL_CARDS: Card[] = [
     deck_tags: ["all", "nostalgia"],
   },
   {
-    id: "L1-007",
+    id: "WARM-04",
     text: {
-      en: "What quirk from your earliest years still defines you?",
-      tr: "En erken yıllarından kalma hangi tuhaflık seni hâlâ tanımlıyor?",
-    },
-    intensity_level: 1,
-    themes: ["identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "identity"],
-  },
-  {
-    id: "L1-008",
-    text: {
-      en: "What moment would you want to relive?",
-      tr: "Hangi anı yeniden yaşamak istersin?",
-    },
-    intensity_level: 1,
-    themes: ["nostalgia", "story"],
-    formats: ["story"],
-    deck_tags: ["all", "nostalgia", "story"],
-    is_story_card: true,
-  },
-  {
-    id: "L1-009",
-    text: {
-      en: "What period of your life do you return to most in your thoughts?",
-      tr: "Düşüncelerinde en sık hangi döneme dönüyorsun?",
-    },
-    intensity_level: 1,
-    themes: ["philosophy", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "philosophy"],
-  },
-  {
-    id: "L1-010",
-    text: {
-      en: "What did you believe at 15 that you don't now?",
-      tr: "15 yaşındayken inandığın ama artık inanmadığın şey nedir?",
+      en: "Where did you go to 'disappear' as a child, and why there?",
+      tr: "Çocukken 'kaybolmak' için nereye giderdin ve neden orası?",
     },
     intensity_level: 1,
     themes: ["nostalgia"],
     formats: ["solo"],
     deck_tags: ["all", "nostalgia"],
   },
-  
-  // Level 2 - Personal, Reflective
   {
-    id: "L2-001",
+    id: "WARM-05",
     text: {
-      en: "What do people notice about you first?",
-      tr: "İnsanlar seni ilk ne zaman fark ediyor?",
+      en: "Which person from your past do you think of most fondly and without any complication?",
+      tr: "Geçmişinden kimi, en ufak bir karmaşa olmadan, en sevgiyle hatırlıyorsun?",
+    },
+    intensity_level: 1,
+    themes: ["nostalgia", "love"],
+    formats: ["solo"],
+    deck_tags: ["all", "nostalgia", "love"],
+  },
+  {
+    id: "WARM-06",
+    text: {
+      en: "What small habit or preference reveals something essential about who you are?",
+      tr: "Hangi küçük alışkanlığın veya tercihin, kim olduğun hakkında temel bir şeyi açığa çıkarıyor?",
     },
     intensity_level: 2,
     themes: ["identity"],
@@ -656,21 +597,43 @@ export const ALL_CARDS: Card[] = [
     deck_tags: ["all", "identity"],
   },
   {
-    id: "L2-002",
+    id: "WARM-07",
     text: {
-      en: "What small gesture makes you feel truly seen?",
-      tr: "Hangi küçük jest kendini gerçekten görülmüş hissettiriyor?",
+      en: "When do you feel most comfortable in your own skin, without performing for anyone?",
+      tr: "Kimin için olursa olsun rol yapmadan, kendi içinde ne zaman en rahat hissediyorsun?",
     },
     intensity_level: 2,
-    themes: ["love", "identity"],
+    themes: ["identity"],
     formats: ["solo"],
-    deck_tags: ["all", "love", "identity"],
+    deck_tags: ["all", "identity"],
   },
   {
-    id: "L2-003",
+    id: "WARM-08",
     text: {
-      en: "When do you feel most like yourself?",
-      tr: "Ne zaman kendini en çok kendin gibi hissediyorsun?",
+      en: "What quality do others recognize in you that you sometimes overlook in yourself?",
+      tr: "Başkalarının sende fark ettiği ama senin bazen kendinde gözden kaçırdığın özellik nedir?",
+    },
+    intensity_level: 2,
+    themes: ["identity"],
+    formats: ["solo"],
+    deck_tags: ["all", "identity"],
+  },
+  {
+    id: "WARM-09",
+    text: {
+      en: "What part of your personality emerged later in life that surprised you?",
+      tr: "Kişiliğinin hangi parçası hayatının ilerleyen dönemlerinde ortaya çıktı ve seni şaşırttı?",
+    },
+    intensity_level: 2,
+    themes: ["identity"],
+    formats: ["solo"],
+    deck_tags: ["all", "identity"],
+  },
+  {
+    id: "WARM-10",
+    text: {
+      en: "Which trait do you share with someone you admire, and does that make you like yourself more?",
+      tr: "Hayran olduğun biriyle hangi ortak özelliği paylaşıyorsun ve bu seni kendine daha çok yaklaştırıyor mu?",
     },
     intensity_level: 2,
     themes: ["identity", "philosophy"],
@@ -678,1513 +641,322 @@ export const ALL_CARDS: Card[] = [
     deck_tags: ["all", "identity", "philosophy"],
   },
   {
-    id: "L2-004",
+    id: "WARM-11",
     text: {
-      en: "What do you think about but never say?",
-      tr: "Ne düşünüyorsun ama asla söylemiyorsun?",
+      en: "What simple moment from your day brings you the most genuine pleasure?",
+      tr: "Gününün hangi basit anı sana en gerçek keyfi veriyor?",
     },
-    intensity_level: 2,
-    themes: ["deep_waters", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "deep_waters"],
-  },
-  {
-    id: "L2-005",
-    text: {
-      en: "What traces of your younger self remain visible?",
-      tr: "Genç halinin hangi izleri hâlâ görünür?",
-    },
-    intensity_level: 2,
-    themes: ["nostalgia", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "nostalgia", "identity"],
-  },
-  {
-    id: "L2-006",
-    text: {
-      en: "What do you believe that others don't?",
-      tr: "Başkalarının inanmadığı ama senin inandığın şey nedir?",
-    },
-    intensity_level: 2,
-    themes: ["identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "identity"],
-  },
-  {
-    id: "L2-007",
-    text: {
-      en: "How has your idea of home changed?",
-      tr: "\"Ev\" kavramın nasıl değişti?",
-    },
-    intensity_level: 2,
+    intensity_level: 1,
     themes: ["philosophy"],
     formats: ["solo"],
     deck_tags: ["all", "philosophy"],
   },
   {
-    id: "L2-008",
+    id: "WARM-12",
     text: {
-      en: "How do you show love without words?",
-      tr: "Sevgini kelimeler olmadan nasıl gösteriyorsun?",
+      en: "What did a stranger once say or do that stayed with you forever?",
+      tr: "Bir yabancının söylediği veya yaptığı hangi şey seninle sonsuza kadar kaldı?",
     },
-    intensity_level: 2,
-    themes: ["love", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "love"],
-  },
-  {
-    id: "L2-009",
-    text: {
-      en: "When did you realize you'd become someone unexpected?",
-      tr: "Beklemediğin biri olduğunu ne zaman fark ettin?",
-    },
-    intensity_level: 2,
-    themes: ["story", "identity"],
+    intensity_level: 1,
+    themes: ["story"],
     formats: ["story"],
     deck_tags: ["all", "story"],
-    is_story_card: true,
   },
   {
-    id: "L2-010",
+    id: "WARM-13",
     text: {
-      en: "Which emotion do you understand better now than before?",
-      tr: "Hangi duyguyu önceden olduğundan daha iyi anlıyorsun?",
+      en: "What's the kindest thing someone has done for you that you never got to thank them for?",
+      tr: "Birinin senin için yaptığı ama teşekkür etme fırsatı bulamadığın en nazik şey neydi?",
     },
-    intensity_level: 2,
-    themes: ["philosophy", "identity"],
+    intensity_level: 1,
+    themes: ["love", "story"],
     formats: ["solo"],
-    deck_tags: ["all", "philosophy"],
+    deck_tags: ["all", "love", "story"],
   },
-  
-  // Level 3 - Emotional Depth
   {
-    id: "L3-001",
+    id: "WARM-14",
     text: {
-      en: "What lie did you tell yourself for too long?",
-      tr: "Kendine çok uzun süre hangi yalanı söyledin?",
+      en: "If you could revisit one specific afternoon from your childhood, which would it be?",
+      tr: "Çocukluğundan bir öğleden sonrayı tekrar ziyaret edebilseydin, hangisi olurdu?",
     },
-    intensity_level: 3,
-    themes: ["shadow", "identity"],
+    intensity_level: 1,
+    themes: ["nostalgia"],
     formats: ["solo"],
-    deck_tags: ["all", "shadow", "identity"],
+    deck_tags: ["all", "nostalgia"],
   },
   {
-    id: "L3-002",
+    id: "WARM-15",
     text: {
-      en: "What would most surprise your 15-year-old self?",
-      tr: "15 yaşındaki halini en çok ne şaşırtırdı?",
-    },
-    intensity_level: 3,
-    themes: ["nostalgia", "philosophy"],
-    formats: ["solo"],
-    deck_tags: ["all", "nostalgia", "philosophy"],
-  },
-  {
-    id: "L3-003",
-    text: {
-      en: "What are you proud of that would never go on a resume?",
-      tr: "Gurur duyduğun ama asla özgeçmişine koymayacağın şey nedir?",
-    },
-    intensity_level: 3,
-    themes: ["identity", "shadow"],
-    formats: ["solo"],
-    deck_tags: ["all", "identity", "shadow"],
-  },
-  {
-    id: "L3-004",
-    text: {
-      en: "What question have you carried for years without an answer?",
-      tr: "Yıllardır taşıdığın ama cevabını bulamadığın soru nedir?",
-    },
-    intensity_level: 3,
-    themes: ["philosophy", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "philosophy", "identity"],
-  },
-  {
-    id: "L3-005",
-    text: {
-      en: "What did you lose without realizing its value?",
-      tr: "Değerini fark etmeden neyi kaybettin?",
-    },
-    intensity_level: 3,
-    themes: ["nostalgia", "philosophy"],
-    formats: ["solo"],
-    deck_tags: ["all", "nostalgia", "philosophy"],
-  },
-  {
-    id: "L3-006",
-    text: {
-      en: "What small decision changed everything?",
-      tr: "Hangi küçük karar her şeyi değiştirdi?",
-    },
-    intensity_level: 3,
-    themes: ["philosophy", "nostalgia"],
-    formats: ["story"],
-    deck_tags: ["all", "philosophy", "nostalgia"],
-    is_story_card: true,
-  },
-  {
-    id: "L3-007",
-    text: {
-      en: "When did you realize you'd been wrong about something you were certain of?",
-      tr: "Kesin olduğun bir şeyde yanıldığını ne zaman fark ettin?",
-    },
-    intensity_level: 3,
-    themes: ["philosophy", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "philosophy", "identity"],
-  },
-  {
-    id: "L3-008",
-    text: {
-      en: "What have you pretended to accept that you actually can't?",
-      tr: "Kabul ettiğini iddia ettiğin ama aslında kabul edemediğin şey nedir?",
-    },
-    intensity_level: 3,
-    themes: ["deep_waters", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "deep_waters", "identity"],
-  },
-  
-  // Level 4 - Deep Vulnerability
-  {
-    id: "L4-001",
-    text: {
-      en: "What truth about yourself are you avoiding?",
-      tr: "Kendin hakkında hangi gerçekten kaçınıyorsun?",
-    },
-    intensity_level: 4,
-    themes: ["deep_waters", "shadow"],
-    formats: ["solo"],
-    deck_tags: ["all", "deep_waters", "shadow"],
-  },
-  {
-    id: "L4-002",
-    text: {
-      en: "When did you first notice you were becoming someone unfamiliar?",
-      tr: "Kendine yabancı biri olmaya başladığını ilk ne zaman fark ettin?",
-    },
-    intensity_level: 4,
-    themes: ["identity", "deep_waters"],
-    formats: ["story"],
-    deck_tags: ["all", "identity", "deep_waters"],
-    is_story_card: true,
-  },
-  {
-    id: "L4-003",
-    text: {
-      en: "How does the you in others' memories differ from who you know yourself to be?",
-      tr: "Başkalarının hatıralarındaki sen, kendini bildiğin senden nasıl farklı?",
-    },
-    intensity_level: 4,
-    themes: ["identity", "philosophy"],
-    formats: ["solo"],
-    deck_tags: ["all", "identity", "philosophy"],
-  },
-  {
-    id: "L4-004",
-    text: {
-      en: "What contradiction within yourself have you learned to live with?",
-      tr: "Kendi içindeki hangi çelişkiyle yaşamayı öğrendin?",
-    },
-    intensity_level: 4,
-    themes: ["shadow", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "identity"],
-  },
-  {
-    id: "L4-005",
-    text: {
-      en: "What relationship shaped you in ways you only understood later?",
-      tr: "Seni şekillendirdiğini ancak sonradan anladığın ilişki hangisi?",
-    },
-    intensity_level: 4,
-    themes: ["love", "deep_waters"],
-    formats: ["story"],
-    deck_tags: ["all", "love", "deep_waters"],
-    is_story_card: true,
-  },
-  
-  // Level 5 - Shadows, Deepest Questions
-  {
-    id: "L5-001",
-    text: {
-      en: "What have you never told anyone because you're unsure how it would be received?",
-      tr: "Nasıl karşılanacağından emin olmadığın için kimseye söylemediğin şey nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  
-  // Level 2 - Additional cards (11-20)
-  {
-    id: "L2-011",
-    text: {
-      en: "What makes you feel most at home?",
-      tr: "Kendini en çok evinde hissettiren şey nedir?",
-    },
-    intensity_level: 2,
-    themes: ["identity", "nostalgia"],
-    formats: ["solo"],
-    deck_tags: ["all", "identity", "nostalgia"],
-  },
-  {
-    id: "L2-012",
-    text: {
-      en: "What do you do when no one is watching?",
-      tr: "Kimse bakmazken ne yaparsın?",
+      en: "What's a book, movie, or song that feels like it was written specifically for you?",
+      tr: "Sanki sadece senin için yazılmış gibi hissettiren bir kitap, film veya şarkı hangisi?",
     },
     intensity_level: 2,
     themes: ["identity"],
     formats: ["solo"],
     deck_tags: ["all", "identity"],
   },
+
+  // --- DEEP (Level 3) ---
   {
-    id: "L2-013",
+    id: "DEEP-01",
     text: {
-      en: "What childhood dream did you let go of?",
-      tr: "Hangi çocukluk hayalinden vazgeçtin?",
+      en: "What aspect of yourself did you resist acknowledging for the longest time?",
+      tr: "Kendinle ilgili hangi özelliği kabullenmekte en uzun süre direndin?",
     },
-    intensity_level: 2,
+    intensity_level: 3,
+    themes: ["identity", "shadow"],
+    formats: ["solo"],
+    deck_tags: ["all", "identity", "shadow"],
+  },
+  {
+    id: "DEEP-02",
+    text: {
+      en: "When did you realize you'd been wrong about something you were absolutely certain of?",
+      tr: "Kesinlikle emin olduğun bir konuda yanıldığını ne zaman fark ettin?",
+    },
+    intensity_level: 3,
+    themes: ["philosophy"],
+    formats: ["solo"],
+    deck_tags: ["all", "philosophy"],
+  },
+  {
+    id: "DEEP-03",
+    text: {
+      en: "What pattern in your life have you struggled to break, even though you see it clearly?",
+      tr: "Hayatında, net bir şekilde görmene rağmen kırmak için mücadele ettiğin hangi kalıbın var?",
+    },
+    intensity_level: 3,
+    themes: ["identity", "shadow"],
+    formats: ["solo"],
+    deck_tags: ["all", "identity", "shadow"],
+  },
+  {
+    id: "DEEP-04",
+    text: {
+      en: "What emotion have you learned to sit with rather than trying to escape?",
+      tr: "Kaçmaya çalışmak yerine içine oturmayı öğrendiğin duygu hangisi?",
+    },
+    intensity_level: 3,
+    themes: ["deep_waters", "identity"],
+    formats: ["solo"],
+    deck_tags: ["all", "deep_waters", "identity"],
+  },
+  {
+    id: "DEEP-05",
+    text: {
+      en: "When did you discover you were capable of something you didn't think possible?",
+      tr: "Mümkün olmadığını düşündüğün bir şeyi yapabileceğini ne zaman keşfettin?",
+    },
+    intensity_level: 3,
+    themes: ["identity", "story"],
+    formats: ["story"],
+    deck_tags: ["all", "identity", "story"],
+  },
+  {
+    id: "DEEP-06",
+    text: {
+      en: "What loss taught you something you couldn't have learned any other way?",
+      tr: "Hangi kayıp sana başka türlü öğrenemeyeceğin bir şeyi öğretti?",
+    },
+    intensity_level: 3,
+    themes: ["deep_waters", "philosophy"],
+    formats: ["solo"],
+    deck_tags: ["all", "deep_waters", "philosophy"],
+  },
+  {
+    id: "DEEP-07",
+    text: {
+      en: "How has your understanding of what 'love' means changed over the last decade?",
+      tr: "Son on yılda 'aşk'ın ne anlama geldiğine dair anlayışın nasıl değişti?",
+    },
+    intensity_level: 3,
+    themes: ["love", "philosophy"],
+    formats: ["solo"],
+    deck_tags: ["all", "love", "philosophy"],
+  },
+  {
+    id: "DEEP-08",
+    text: {
+      en: "What assumption about how life works have you had to reconsider recently?",
+      tr: "Hayatın nasıl işlediğine dair hangi ön kabulünü yakın zamanda gözden geçirmek zorunda kaldın?",
+    },
+    intensity_level: 3,
+    themes: ["philosophy"],
+    formats: ["solo"],
+    deck_tags: ["all", "philosophy"],
+  },
+  {
+    id: "DEEP-09",
+    text: {
+      en: "What philosophical question do you find yourself returning to without a resolution?",
+      tr: "Çözüme ulaştıramadan sürekli döndüğün felsefi soru hangisi?",
+    },
+    intensity_level: 3,
+    themes: ["philosophy"],
+    formats: ["solo"],
+    deck_tags: ["all", "philosophy"],
+  },
+  {
+    id: "DEEP-10",
+    text: {
+      en: "What influence from your past only revealed its impact years afterward?",
+      tr: "Geçmişindeki hangi etki ancak yıllar sonra etkisini tam olarak gösterdi?",
+    },
+    intensity_level: 3,
     themes: ["nostalgia", "identity"],
     formats: ["solo"],
     deck_tags: ["all", "nostalgia", "identity"],
   },
   {
-    id: "L2-014",
+    id: "DEEP-11",
     text: {
-      en: "What have you learned about yourself through others?",
-      tr: "Başkaları aracılığıyla kendin hakkında ne öğrendin?",
+      en: "When did you realize you'd become someone you hadn't expected to be?",
+      tr: "Beklemediğin birine dönüştüğünü ne zaman fark ettin?",
     },
-    intensity_level: 2,
+    intensity_level: 3,
     themes: ["identity", "philosophy"],
     formats: ["solo"],
     deck_tags: ["all", "identity", "philosophy"],
   },
   {
-    id: "L2-015",
+    id: "DEEP-12",
     text: {
-      en: "What moment made you feel truly understood?",
-      tr: "Kendini gerçekten anlaşılmış hissettiğin an hangisi?",
+      en: "What truth about yourself do you struggle to tell people because it sounds like a cliché?",
+      tr: "Çok klişe geldiği için insanlara söylemekte zorlandığın kendinle ilgili gerçek nedir?",
     },
-    intensity_level: 2,
+    intensity_level: 3,
+    themes: ["identity"],
+    formats: ["solo"],
+    deck_tags: ["all", "identity"],
+  },
+  {
+    id: "DEEP-13",
+    text: {
+      en: "Which friend from your past do you wish you could see through your current eyes?",
+      tr: "Geçmişindeki hangi arkadaşını şimdiki gözlerinle görebilmeyi isterdin?",
+    },
+    intensity_level: 3,
+    themes: ["nostalgia", "love"],
+    formats: ["solo"],
+    deck_tags: ["all", "nostalgia", "love"],
+  },
+  {
+    id: "DEEP-14",
+    text: {
+      en: "What does 'home' look like to you now, and how much of it is a person rather than a place?",
+      tr: "Senin için 'ev' artık neye benziyor ve bunun ne kadarı bir mekandan ziyade bir insan?",
+    },
+    intensity_level: 3,
+    themes: ["philosophy", "love"],
+    formats: ["solo"],
+    deck_tags: ["all", "philosophy", "love"],
+  },
+  {
+    id: "DEEP-15",
+    text: {
+      en: "What's the hardest thing you've ever had to forgive yourself for?",
+      tr: "Kendine dair affetmek zorunda kaldığın en zor şey neydi?",
+    },
+    intensity_level: 3,
+    themes: ["identity", "shadow"],
+    formats: ["solo"],
+    deck_tags: ["all", "identity", "shadow"],
+  },
+
+  // --- SHADOWS (Levels 4-5) ---
+  {
+    id: "SHADOW-01",
+    text: {
+      en: "What contradiction within yourself have you learned to accept rather than reconcile?",
+      tr: "Kendinle ilgili hangi çelişkiyi çözmek yerine kabullenmeyi öğrendin?",
+    },
+    intensity_level: 4,
+    themes: ["identity", "shadow"],
+    formats: ["solo"],
+    deck_tags: ["all", "identity", "shadow"],
+  },
+  {
+    id: "SHADOW-02",
+    text: {
+      en: "What part of yourself do you keep hidden even from those closest to you?",
+      tr: "Kendinin hangi parçasını en yakınındaki insanlardan bile saklıyorsun?",
+    },
+    intensity_level: 4,
+    themes: ["shadow", "deep_waters"],
+    formats: ["solo"],
+    deck_tags: ["all", "shadow", "deep_waters"],
+  },
+  {
+    id: "SHADOW-03",
+    text: {
+      en: "When did you realize you'd been pretending to be someone you're not, for the benefit of others?",
+      tr: "Başkalarının yararı için olmadığın biriymiş gibi davrandığını ne zaman fark ettin?",
+    },
+    intensity_level: 4,
+    themes: ["identity", "shadow"],
+    formats: ["solo"],
+    deck_tags: ["all", "identity", "shadow"],
+  },
+  {
+    id: "SHADOW-04",
+    text: {
+      en: "What truth have you been running from that you know you'll eventually need to face?",
+      tr: "Kaçtığın hangi gerçekle eninde sonunda yüzleşmen gerekeceğini biliyorsun?",
+    },
+    intensity_level: 4,
+    themes: ["shadow", "deep_waters"],
+    formats: ["solo"],
+    deck_tags: ["all", "shadow", "deep_waters"],
+  },
+  {
+    id: "SHADOW-05",
+    text: {
+      en: "What have you kept to yourself for years, simply because you don't know the words for it?",
+      tr: "Sırf ona isim veremediğin için yıllardır kendine sakladığın ne var?",
+    },
+    intensity_level: 4,
+    themes: ["deep_waters", "identity"],
+    formats: ["solo"],
+    deck_tags: ["all", "deep_waters", "identity"],
+  },
+  {
+    id: "SHADOW-06",
+    text: {
+      en: "What did you lose without realizing its value until it was no longer there?",
+      tr: "Değerini kaybedene kadar fark etmediğin neyi kaybettin?",
+    },
+    intensity_level: 4,
+    themes: ["deep_waters", "nostalgia"],
+    formats: ["solo"],
+    deck_tags: ["all", "deep_waters", "nostalgia"],
+  },
+  {
+    id: "SHADOW-07",
+    text: {
+      en: "What relationship changed you in ways you didn't understand until it was over?",
+      tr: "Seni bittikten sonra anladığın şekilde değiştiren hangi ilişkin var?",
+    },
+    intensity_level: 4,
     themes: ["love", "identity"],
     formats: ["solo"],
     deck_tags: ["all", "love", "identity"],
   },
   {
-    id: "L2-016",
+    id: "SHADOW-08",
     text: {
-      en: "What question about yourself remains unanswered?",
-      tr: "Kendin hakkında cevapsız kalan soru nedir?",
+      en: "What version of you only exists in your own head?",
+      tr: "Sadece kendi zihninde var olan versiyonun hangisi?",
     },
-    intensity_level: 2,
-    themes: ["identity", "philosophy"],
-    formats: ["solo"],
-    deck_tags: ["all", "identity", "philosophy"],
-  },
-  {
-    id: "L2-017",
-    text: {
-      en: "What do you return to when you need comfort?",
-      tr: "Teselliye ihtiyaç duyduğunda neye dönersin?",
-    },
-    intensity_level: 2,
-    themes: ["nostalgia", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "nostalgia", "identity"],
-  },
-  {
-    id: "L2-018",
-    text: {
-      en: "What belief has shaped how you see the world?",
-      tr: "Dünyaya bakışını şekillendiren inanç nedir?",
-    },
-    intensity_level: 2,
-    themes: ["philosophy", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "philosophy", "identity"],
-  },
-  {
-    id: "L2-019",
-    text: {
-      en: "What do you wish someone had told you earlier?",
-      tr: "Birinin sana daha önce söylemesini dilediğin şey nedir?",
-    },
-    intensity_level: 2,
-    themes: ["philosophy", "nostalgia"],
-    formats: ["solo"],
-    deck_tags: ["all", "philosophy", "nostalgia"],
-  },
-  {
-    id: "L2-020",
-    text: {
-      en: "What makes you feel most loved?",
-      tr: "Kendini en çok sevilmiş hissettiren şey nedir?",
-    },
-    intensity_level: 2,
-    themes: ["love"],
-    formats: ["solo"],
-    deck_tags: ["all", "love"],
-  },
-  
-  // Level 3 - Additional cards (9-30)
-  {
-    id: "L3-009",
-    text: {
-      en: "What part of yourself took longest to accept?",
-      tr: "Kendinin hangi kısmını kabul etmek en uzun sürdü?",
-    },
-    intensity_level: 3,
+    intensity_level: 5,
     themes: ["identity", "shadow"],
     formats: ["solo"],
     deck_tags: ["all", "identity", "shadow"],
   },
   {
-    id: "L3-010",
-    text: {
-      en: "What did you learn about yourself in a moment of crisis?",
-      tr: "Bir kriz anında kendin hakkında ne öğrendin?",
-    },
-    intensity_level: 3,
-    themes: ["identity", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "identity", "deep_waters"],
-  },
-  {
-    id: "L3-011",
-    text: {
-      en: "What emotion do you struggle to name?",
-      tr: "İsmini koymakta zorlandığın duygu nedir?",
-    },
-    intensity_level: 3,
-    themes: ["identity", "philosophy"],
-    formats: ["solo"],
-    deck_tags: ["all", "identity", "philosophy"],
-  },
-  {
-    id: "L3-012",
-    text: {
-      en: "What pattern in your life took you years to recognize?",
-      tr: "Hayatındaki hangi örüntüyü fark etmen yıllar aldı?",
-    },
-    intensity_level: 3,
-    themes: ["philosophy", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "philosophy", "identity"],
-  },
-  {
-    id: "L3-013",
-    text: {
-      en: "What did you once fear that you now embrace?",
-      tr: "Bir zamanlar korktuğun ama şimdi kucakladığın şey nedir?",
-    },
-    intensity_level: 3,
-    themes: ["shadow", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "identity"],
-  },
-  {
-    id: "L3-014",
-    text: {
-      en: "What truth did you discover about yourself that surprised you?",
-      tr: "Kendin hakkında keşfettiğin ve seni şaşırtan gerçek nedir?",
-    },
-    intensity_level: 3,
-    themes: ["identity", "philosophy"],
-    formats: ["solo"],
-    deck_tags: ["all", "identity", "philosophy"],
-  },
-  {
-    id: "L3-015",
-    text: {
-      en: "What relationship taught you something unexpected about yourself?",
-      tr: "Hangi ilişki sana kendin hakkında beklenmedik bir şey öğretti?",
-    },
-    intensity_level: 3,
-    themes: ["love", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "identity", "philosophy"],
-  },
-  {
-    id: "L3-016",
-    text: {
-      en: "What do you know about yourself that others don't?",
-      tr: "Kendin hakkında başkalarının bilmediği şey nedir?",
-    },
-    intensity_level: 3,
-    themes: ["identity", "shadow"],
-    formats: ["solo"],
-    deck_tags: ["all", "identity", "shadow"],
-  },
-  {
-    id: "L3-017",
-    text: {
-      en: "What moment revealed who you really are?",
-      tr: "Gerçekten kim olduğunu ortaya çıkaran an hangisi?",
-    },
-    intensity_level: 3,
-    themes: ["identity", "philosophy"],
-    formats: ["solo"],
-    deck_tags: ["all", "identity", "philosophy"],
-  },
-  {
-    id: "L3-018",
-    text: {
-      en: "What did you once believe about yourself that you now know isn't true?",
-      tr: "Kendin hakkında bir zamanlar inandığın ama şimdi doğru olmadığını bildiğin şey nedir?",
-    },
-    intensity_level: 3,
-    themes: ["identity", "philosophy"],
-    formats: ["solo"],
-    deck_tags: ["all", "identity", "philosophy"],
-  },
-  {
-    id: "L3-019",
-    text: {
-      en: "What wound shaped you in ways you're only now understanding?",
-      tr: "Seni şimdi anlamaya başladığın şekillerde şekillendiren yara nedir?",
-    },
-    intensity_level: 3,
-    themes: ["deep_waters", "shadow"],
-    formats: ["solo"],
-    deck_tags: ["all", "deep_waters", "shadow"],
-  },
-  {
-    id: "L3-020",
-    text: {
-      en: "What do you wish you could tell your younger self?",
-      tr: "Genç haline söylemek istediğin şey nedir?",
-    },
-    intensity_level: 3,
-    themes: ["nostalgia", "philosophy"],
-    formats: ["solo"],
-    deck_tags: ["all", "nostalgia", "philosophy"],
-  },
-  {
-    id: "L3-021",
-    text: {
-      en: "What have you forgiven that you thought you never could?",
-      tr: "Asla yapamayacağını düşündüğün ama affettiğin şey nedir?",
-    },
-    intensity_level: 3,
-    themes: ["philosophy", "shadow"],
-    formats: ["solo"],
-    deck_tags: ["all", "philosophy", "shadow"],
-  },
-  {
-    id: "L3-022",
-    text: {
-      en: "What did you learn about love that surprised you?",
-      tr: "Aşk hakkında seni şaşırtan şey nedir?",
-    },
-    intensity_level: 3,
-    themes: ["love", "philosophy"],
-    formats: ["solo"],
-    deck_tags: ["all", "philosophy", "identity"],
-  },
-  {
-    id: "L3-023",
-    text: {
-      en: "What part of your past still influences who you are today?",
-      tr: "Geçmişinin hangi kısmı bugünkü seni hâlâ etkiliyor?",
-    },
-    intensity_level: 3,
-    themes: ["nostalgia", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "nostalgia", "identity"],
-  },
-  {
-    id: "L3-024",
-    text: {
-      en: "What do you hide from others that you wish you didn't have to?",
-      tr: "Başkalarından sakladığın ama saklamak zorunda olmamayı dilediğin şey nedir?",
-    },
-    intensity_level: 3,
-    themes: ["shadow", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "identity"],
-  },
-  {
-    id: "L3-025",
-    text: {
-      en: "What experience changed how you see yourself?",
-      tr: "Kendine bakışını değiştiren deneyim nedir?",
-    },
-    intensity_level: 3,
-    themes: ["identity", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "identity", "deep_waters"],
-  },
-  {
-    id: "L3-026",
-    text: {
-      en: "What question about life do you still wrestle with?",
-      tr: "Hayat hakkında hâlâ mücadele ettiğin soru nedir?",
-    },
-    intensity_level: 3,
-    themes: ["philosophy", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "philosophy", "identity"],
-  },
-  {
-    id: "L3-027",
-    text: {
-      en: "What did you discover you were capable of when pushed?",
-      tr: "Zorlandığında yapabileceğini keşfettiğin şey nedir?",
-    },
-    intensity_level: 3,
-    themes: ["identity", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "identity", "deep_waters"],
-  },
-  {
-    id: "L3-028",
-    text: {
-      en: "What relationship changed you in ways you didn't expect?",
-      tr: "Seni beklemediğin şekillerde değiştiren ilişki hangisi?",
-    },
-    intensity_level: 3,
-    themes: ["love", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "deep_waters", "identity"],
-  },
-  {
-    id: "L3-029",
-    text: {
-      en: "What do you understand now about yourself that you didn't before?",
-      tr: "Kendin hakkında önceden anlamadığın ama şimdi anladığın şey nedir?",
-    },
-    intensity_level: 3,
-    themes: ["identity", "philosophy"],
-    formats: ["solo"],
-    deck_tags: ["all", "identity", "philosophy"],
-  },
-  {
-    id: "L3-030",
-    text: {
-      en: "What moment made you realize you'd grown?",
-      tr: "Büyüdüğünü fark ettiğin an hangisi?",
-    },
-    intensity_level: 3,
-    themes: ["philosophy", "nostalgia"],
-    formats: ["solo"],
-    deck_tags: ["all", "philosophy", "nostalgia"],
-  },
-  
-  // Level 4 - Additional cards (6-40)
-  {
-    id: "L4-006",
-    text: {
-      en: "What part of yourself do you keep hidden from those closest to you?",
-      tr: "Kendinin hangi kısmını en yakınlarından saklıyorsun?",
-    },
-    intensity_level: 4,
-    themes: ["shadow", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "identity"],
-  },
-  {
-    id: "L4-007",
-    text: {
-      en: "What truth about yourself did you resist the longest?",
-      tr: "Kendin hakkında en uzun süre direndiğin gerçek nedir?",
-    },
-    intensity_level: 4,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L4-008",
-    text: {
-      en: "What have you never admitted to yourself?",
-      tr: "Kendine asla itiraf etmediğin şey nedir?",
-    },
-    intensity_level: 4,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L4-009",
-    text: {
-      en: "What did you lose that you're still grieving?",
-      tr: "Hâlâ yasını tuttuğun kaybın nedir?",
-    },
-    intensity_level: 4,
-    themes: ["deep_waters", "shadow"],
-    formats: ["solo"],
-    deck_tags: ["all", "deep_waters", "shadow"],
-  },
-  {
-    id: "L4-010",
-    text: {
-      en: "What fear has shaped your choices more than you'd like to admit?",
-      tr: "Seçimlerini itiraf etmek istediğinden daha fazla şekillendiren korku nedir?",
-    },
-    intensity_level: 4,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L4-011",
-    text: {
-      en: "What do you know about yourself that you wish you didn't?",
-      tr: "Kendin hakkında bilmek istemediğin şey nedir?",
-    },
-    intensity_level: 4,
-    themes: ["shadow", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "identity"],
-  },
-  {
-    id: "L4-012",
-    text: {
-      en: "What relationship broke something in you that you're still trying to repair?",
-      tr: "İçinde hâlâ tamir etmeye çalıştığın bir şeyi kıran ilişki hangisi?",
-    },
-    intensity_level: 4,
-    themes: ["deep_waters", "love"],
-    formats: ["solo"],
-    deck_tags: ["all", "deep_waters", "love"],
-  },
-  {
-    id: "L4-013",
-    text: {
-      en: "What have you done that you're most ashamed of?",
-      tr: "En çok utandığın şey nedir?",
-    },
-    intensity_level: 4,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L4-014",
-    text: {
-      en: "What part of yourself do you struggle to love?",
-      tr: "Sevmekte zorlandığın kendinin hangi kısmı?",
-    },
-    intensity_level: 4,
-    themes: ["shadow", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "identity"],
-  },
-  {
-    id: "L4-015",
-    text: {
-      en: "What did someone do to you that you've never fully recovered from?",
-      tr: "Birinin sana yaptığı ve asla tam olarak iyileşemediğin şey nedir?",
-    },
-    intensity_level: 4,
-    themes: ["deep_waters", "shadow"],
-    formats: ["solo"],
-    deck_tags: ["all", "deep_waters", "shadow"],
-  },
-  {
-    id: "L4-016",
-    text: {
-      en: "What truth about yourself are you still running from?",
-      tr: "Kendin hakkında hâlâ kaçtığın gerçek nedir?",
-    },
-    intensity_level: 4,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L4-017",
-    text: {
-      en: "What did you do that you can't forgive yourself for?",
-      tr: "Kendini affedemediğin şey nedir?",
-    },
-    intensity_level: 4,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L4-018",
-    text: {
-      en: "What have you kept secret that weighs on you?",
-      tr: "Seni ağırlaştıran sırrın nedir?",
-    },
-    intensity_level: 4,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L4-019",
-    text: {
-      en: "What relationship damaged you in ways you're still discovering?",
-      tr: "Seni hâlâ keşfetmekte olduğun şekillerde yaralayan ilişki hangisi?",
-    },
-    intensity_level: 4,
-    themes: ["deep_waters", "love"],
-    formats: ["solo"],
-    deck_tags: ["all", "deep_waters", "love"],
-  },
-  {
-    id: "L4-020",
-    text: {
-      en: "What do you know about yourself that would change how others see you?",
-      tr: "Kendin hakkında başkalarının sana bakışını değiştirecek şey nedir?",
-    },
-    intensity_level: 4,
-    themes: ["shadow", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "identity"],
-  },
-  {
-    id: "L4-021",
-    text: {
-      en: "What have you never told anyone because you're afraid of their reaction?",
-      tr: "Tepkisinden korktuğun için kimseye söylemediğin şey nedir?",
-    },
-    intensity_level: 4,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L4-022",
-    text: {
-      en: "What did you learn about yourself during your darkest time?",
-      tr: "En karanlık zamanında kendin hakkında ne öğrendin?",
-    },
-    intensity_level: 4,
-    themes: ["deep_waters", "shadow"],
-    formats: ["solo"],
-    deck_tags: ["all", "deep_waters", "shadow"],
-  },
-  {
-    id: "L4-023",
-    text: {
-      en: "What part of your past are you still trying to make peace with?",
-      tr: "Geçmişinin hangi kısmıyla hâlâ barışmaya çalışıyorsun?",
-    },
-    intensity_level: 4,
-    themes: ["deep_waters", "shadow"],
-    formats: ["solo"],
-    deck_tags: ["all", "deep_waters", "shadow"],
-  },
-  {
-    id: "L4-024",
-    text: {
-      en: "What do you wish you could change about yourself but can't?",
-      tr: "Kendinde değiştirmek istediğin ama yapamadığın şey nedir?",
-    },
-    intensity_level: 4,
-    themes: ["shadow", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "identity"],
-  },
-  {
-    id: "L4-025",
-    text: {
-      en: "What have you done that you hope no one ever discovers?",
-      tr: "Kimsenin asla keşfetmesini ummadığın şey nedir?",
-    },
-    intensity_level: 4,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L4-026",
-    text: {
-      en: "What relationship taught you something painful about yourself?",
-      tr: "Hangi ilişki sana kendin hakkında acı verici bir şey öğretti?",
-    },
-    intensity_level: 4,
-    themes: ["deep_waters", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "deep_waters", "identity"],
-  },
-  {
-    id: "L4-027",
-    text: {
-      en: "What truth about yourself do you wish wasn't true?",
-      tr: "Kendin hakkında doğru olmamasını dilediğin gerçek nedir?",
-    },
-    intensity_level: 4,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L4-028",
-    text: {
-      en: "What did you discover you were capable of that frightened you?",
-      tr: "Yapabileceğini keşfettiğin ve seni korkutan şey nedir?",
-    },
-    intensity_level: 4,
-    themes: ["shadow", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "identity"],
-  },
-  {
-    id: "L4-029",
-    text: {
-      en: "What have you never forgiven yourself for?",
-      tr: "Kendini asla affetmediğin şey nedir?",
-    },
-    intensity_level: 4,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L4-030",
-    text: {
-      en: "What do you know about yourself that you're afraid others will judge?",
-      tr: "Kendin hakkında başkalarının yargılayacağından korktuğun şey nedir?",
-    },
-    intensity_level: 4,
-    themes: ["shadow", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "identity"],
-  },
-  {
-    id: "L4-031",
-    text: {
-      en: "What relationship left a mark on you that you can't erase?",
-      tr: "Üzerinde silinmez bir iz bırakan ilişki hangisi?",
-    },
-    intensity_level: 4,
-    themes: ["deep_waters", "love"],
-    formats: ["solo"],
-    deck_tags: ["all", "deep_waters", "love"],
-  },
-  {
-    id: "L4-032",
-    text: {
-      en: "What have you done that you're most afraid of being discovered?",
-      tr: "Keşfedilmesinden en çok korktuğun şey nedir?",
-    },
-    intensity_level: 4,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L4-033",
-    text: {
-      en: "What part of yourself do you wish you could erase?",
-      tr: "Silebilmeyi dilediğin kendinin hangi kısmı?",
-    },
-    intensity_level: 4,
-    themes: ["shadow", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "identity"],
-  },
-  {
-    id: "L4-034",
-    text: {
-      en: "What did you learn about yourself that you wish you hadn't?",
-      tr: "Kendin hakkında öğrenmek istemediğin şey nedir?",
-    },
-    intensity_level: 4,
-    themes: ["deep_waters", "shadow"],
-    formats: ["solo"],
-    deck_tags: ["all", "deep_waters", "shadow"],
-  },
-  {
-    id: "L4-035",
-    text: {
-      en: "What relationship showed you a side of yourself you didn't want to see?",
-      tr: "Hangi ilişki sana görmek istemediğin bir yanını gösterdi?",
-    },
-    intensity_level: 4,
-    themes: ["deep_waters", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "deep_waters", "identity"],
-  },
-  {
-    id: "L4-036",
-    text: {
-      en: "What truth about yourself are you still trying to deny?",
-      tr: "Kendin hakkında hâlâ inkâr etmeye çalıştığın gerçek nedir?",
-    },
-    intensity_level: 4,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L4-037",
-    text: {
-      en: "What have you never shared because you're afraid it would change how people see you?",
-      tr: "İnsanların sana bakışını değiştireceğinden korktuğun için paylaşmadığın şey nedir?",
-    },
-    intensity_level: 4,
-    themes: ["shadow", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "identity"],
-  },
-  {
-    id: "L4-038",
-    text: {
-      en: "What did you do that you can't look back on without pain?",
-      tr: "Geriye bakmaya acı çekmeden dayanamadığın şey nedir?",
-    },
-    intensity_level: 4,
-    themes: ["deep_waters", "shadow"],
-    formats: ["solo"],
-    deck_tags: ["all", "deep_waters", "shadow"],
-  },
-  {
-    id: "L4-039",
-    text: {
-      en: "What part of yourself do you hide because you're ashamed of it?",
-      tr: "Utanç duyduğun için sakladığın kendinin hangi kısmı?",
-    },
-    intensity_level: 4,
-    themes: ["shadow", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "identity"],
-  },
-  {
-    id: "L4-040",
-    text: {
-      en: "What relationship broke your trust in a way that still affects you?",
-      tr: "Güvenini hâlâ seni etkileyen şekilde kıran ilişki hangisi?",
-    },
-    intensity_level: 4,
-    themes: ["deep_waters", "love"],
-    formats: ["solo"],
-    deck_tags: ["all", "deep_waters", "love"],
-  },
-  
-  // Level 5 - Additional cards (2-50)
-  {
-    id: "L5-002",
-    text: {
-      en: "What have you never told anyone because you're afraid they'd leave?",
-      tr: "Terk edeceklerinden korktuğun için kimseye söylemediğin şey nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-003",
-    text: {
-      en: "What truth about yourself would you take to your grave?",
-      tr: "Kendin hakkında mezara götüreceğin gerçek nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-004",
-    text: {
-      en: "What have you done that you hope dies with you?",
-      tr: "Seninle birlikte ölmesini umduğun şey nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-005",
-    text: {
-      en: "What secret would destroy your relationships if it came out?",
-      tr: "Ortaya çıksa ilişkilerini yok edecek sırrın nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-006",
-    text: {
-      en: "What have you never admitted because you can't bear the shame?",
-      tr: "Utanç duymaya dayanamadığın için asla itiraf etmediğin şey nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-007",
-    text: {
-      en: "What do you know about yourself that would make others see you differently?",
-      tr: "Kendin hakkında başkalarının sana farklı bakmasına neden olacak şey nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-008",
-    text: {
-      en: "What have you done that you can't forgive yourself for, no matter how hard you try?",
-      tr: "Ne kadar denersen deneyemez, kendini affedemediğin şey nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-009",
-    text: {
-      en: "What relationship damaged you in ways you're still discovering years later?",
-      tr: "Seni yıllar sonra hâlâ keşfetmekte olduğun şekillerde yaralayan ilişki hangisi?",
-    },
-    intensity_level: 5,
-    themes: ["deep_waters", "shadow"],
-    formats: ["solo"],
-    deck_tags: ["all", "deep_waters", "shadow"],
-  },
-  {
-    id: "L5-010",
-    text: {
-      en: "What truth about yourself are you most afraid of facing?",
-      tr: "Kendin hakkında yüzleşmekten en çok korktuğun gerçek nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-011",
-    text: {
-      en: "What have you kept hidden that would change everything if revealed?",
-      tr: "Ortaya çıksa her şeyi değiştirecek sakladığın şey nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-012",
-    text: {
-      en: "What did you do that you hope no one ever finds out?",
-      tr: "Kimsenin asla öğrenmesini ummadığın şey nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-013",
-    text: {
-      en: "What part of yourself do you despise but can't change?",
-      tr: "Nefret ettiğin ama değiştiremediğin kendinin hangi kısmı?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-014",
-    text: {
-      en: "What have you never told anyone because you're afraid they'd never look at you the same?",
-      tr: "Sana aynı şekilde bakmayacaklarından korktuğun için kimseye söylemediğin şey nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-015",
-    text: {
-      en: "What truth about yourself would you do anything to keep hidden?",
-      tr: "Kendin hakkında gizli tutmak için her şeyi yapacağın gerçek nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-016",
-    text: {
-      en: "What did you learn about yourself that you wish you could unlearn?",
-      tr: "Kendin hakkında öğrenmeyi geri almak istediğin şey nedir?",
-    },
-    intensity_level: 5,
-    themes: ["deep_waters", "shadow"],
-    formats: ["solo"],
-    deck_tags: ["all", "deep_waters", "shadow"],
-  },
-  {
-    id: "L5-017",
-    text: {
-      en: "What have you done that you're most terrified of others discovering?",
-      tr: "Başkalarının keşfetmesinden en çok korktuğun şey nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-018",
-    text: {
-      en: "What relationship left you broken in ways you're still trying to understand?",
-      tr: "Seni hâlâ anlamaya çalıştığın şekillerde kıran ilişki hangisi?",
-    },
-    intensity_level: 5,
-    themes: ["deep_waters", "shadow"],
-    formats: ["solo"],
-    deck_tags: ["all", "deep_waters", "shadow"],
-  },
-  {
-    id: "L5-019",
-    text: {
-      en: "What do you know about yourself that you're afraid would make others reject you?",
-      tr: "Kendin hakkında başkalarının seni reddedeceğinden korktuğun şey nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-020",
-    text: {
-      en: "What have you never confessed because the guilt is too heavy?",
-      tr: "Suçluluk duygusu çok ağır olduğu için asla itiraf etmediğin şey nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-021",
-    text: {
-      en: "What truth about yourself are you running from that you know you'll eventually have to face?",
-      tr: "Kendin hakkında kaçtığın ama sonunda yüzleşmek zorunda kalacağını bildiğin gerçek nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-022",
-    text: {
-      en: "What did you do that you can't think about without feeling sick?",
-      tr: "Düşünmeye hasta hissetmeden dayanamadığın şey nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-023",
-    text: {
-      en: "What have you kept secret that would destroy your life if it came out?",
-      tr: "Ortaya çıksa hayatını yok edecek sakladığın şey nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-024",
-    text: {
-      en: "What part of yourself do you wish you could cut out?",
-      tr: "Kesip çıkarmak istediğin kendinin hangi kısmı?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-025",
-    text: {
-      en: "What relationship showed you a darkness in yourself you didn't know existed?",
-      tr: "Hangi ilişki sana var olduğunu bilmediğin bir karanlığı gösterdi?",
-    },
-    intensity_level: 5,
-    themes: ["deep_waters", "shadow"],
-    formats: ["solo"],
-    deck_tags: ["all", "deep_waters", "shadow"],
-  },
-  {
-    id: "L5-026",
-    text: {
-      en: "What have you never told anyone because you're afraid they'd never forgive you?",
-      tr: "Seni asla affetmeyeceklerinden korktuğun için kimseye söylemediğin şey nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-027",
-    text: {
-      en: "What truth about yourself are you most ashamed of?",
-      tr: "Kendin hakkında en çok utandığın gerçek nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-028",
-    text: {
-      en: "What did you discover about yourself that you wish you could forget?",
-      tr: "Kendin hakkında unutmak istediğin şey nedir?",
-    },
-    intensity_level: 5,
-    themes: ["deep_waters", "shadow"],
-    formats: ["solo"],
-    deck_tags: ["all", "deep_waters", "shadow"],
-  },
-  {
-    id: "L5-029",
-    text: {
-      en: "What have you done that you hope dies with you and is never discovered?",
-      tr: "Seninle birlikte ölmesini ve asla keşfedilmemesini umduğun şey nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-030",
-    text: {
-      en: "What relationship broke you in ways you're still trying to piece back together?",
-      tr: "Seni hâlâ parçalarını bir araya getirmeye çalıştığın şekillerde kıran ilişki hangisi?",
-    },
-    intensity_level: 5,
-    themes: ["deep_waters", "shadow"],
-    formats: ["solo"],
-    deck_tags: ["all", "deep_waters", "shadow"],
-  },
-  {
-    id: "L5-031",
-    text: {
-      en: "What do you know about yourself that you're terrified others will find out?",
-      tr: "Kendin hakkında başkalarının öğrenmesinden dehşete düştüğün şey nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-032",
-    text: {
-      en: "What have you never admitted because you can't bear to see yourself that way?",
-      tr: "Kendini o şekilde görmeye dayanamadığın için asla itiraf etmediğin şey nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-033",
-    text: {
-      en: "What truth about yourself would you do anything to keep from others?",
-      tr: "Kendin hakkında başkalarından gizlemek için her şeyi yapacağın gerçek nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-034",
-    text: {
-      en: "What did you do that you can't look at yourself in the mirror after thinking about?",
-      tr: "Düşündükten sonra aynada kendine bakamadığın şey nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-035",
-    text: {
-      en: "What have you kept hidden that would shatter the image others have of you?",
-      tr: "Başkalarının senin hakkındaki imajını parçalayacak sakladığın şey nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-036",
-    text: {
-      en: "What relationship revealed something about yourself that you wish it hadn't?",
-      tr: "Hangi ilişki sana görmek istemediğin bir şeyi ortaya çıkardı?",
-    },
-    intensity_level: 5,
-    themes: ["deep_waters", "shadow"],
-    formats: ["solo"],
-    deck_tags: ["all", "deep_waters", "shadow"],
-  },
-  {
-    id: "L5-037",
-    text: {
-      en: "What truth about yourself are you most afraid of others discovering?",
-      tr: "Kendin hakkında başkalarının keşfetmesinden en çok korktuğun gerçek nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-038",
-    text: {
-      en: "What have you never told anyone because you're afraid it would change everything?",
-      tr: "Her şeyi değiştireceğinden korktuğun için kimseye söylemediğin şey nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-039",
-    text: {
-      en: "What did you learn about yourself that you wish you could erase from your memory?",
-      tr: "Kendin hakkında hafızanızdan silmek istediğin şey nedir?",
-    },
-    intensity_level: 5,
-    themes: ["deep_waters", "shadow"],
-    formats: ["solo"],
-    deck_tags: ["all", "deep_waters", "shadow"],
-  },
-  {
-    id: "L5-040",
-    text: {
-      en: "What have you done that you hope no one ever learns about?",
-      tr: "Kimsenin asla öğrenmesini ummadığın şey nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-041",
-    text: {
-      en: "What part of yourself do you hide because you're terrified of being judged for it?",
-      tr: "Yargılanmaktan dehşete düştüğün için sakladığın kendinin hangi kısmı?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-042",
-    text: {
-      en: "What relationship damaged you in ways you're still trying to heal from?",
-      tr: "Seni hâlâ iyileşmeye çalıştığın şekillerde yaralayan ilişki hangisi?",
-    },
-    intensity_level: 5,
-    themes: ["deep_waters", "shadow"],
-    formats: ["solo"],
-    deck_tags: ["all", "deep_waters", "shadow"],
-  },
-  {
-    id: "L5-043",
-    text: {
-      en: "What truth about yourself would you take to your grave if you could?",
-      tr: "Kendin hakkında yapabilseydin mezara götüreceğin gerçek nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-044",
-    text: {
-      en: "What have you never confessed because the weight of it is too much to bear?",
-      tr: "Ağırlığına dayanamadığın için asla itiraf etmediğin şey nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-045",
-    text: {
-      en: "What did you discover about yourself that made you question who you really are?",
-      tr: "Kendin hakkında gerçekten kim olduğunu sorgulamanı sağlayan şey nedir?",
-    },
-    intensity_level: 5,
-    themes: ["deep_waters", "identity"],
-    formats: ["solo"],
-    deck_tags: ["all", "deep_waters", "identity"],
-  },
-  {
-    id: "L5-046",
-    text: {
-      en: "What have you kept secret that would destroy your relationships if revealed?",
-      tr: "Ortaya çıksa ilişkilerini yok edecek sakladığın şey nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-047",
-    text: {
-      en: "What truth about yourself are you running from that you know is catching up to you?",
-      tr: "Kendin hakkında kaçtığın ama seni yakaladığını bildiğin gerçek nedir?",
-    },
-    intensity_level: 5,
-    themes: ["shadow", "deep_waters"],
-    formats: ["solo"],
-    deck_tags: ["all", "shadow", "deep_waters"],
-  },
-  {
-    id: "L5-048",
-    text: {
-      en: "What relationship broke something in you that you're not sure can ever be fixed?",
-      tr: "İçinde asla tamir edilemeyeceğinden emin olmadığın bir şeyi kıran ilişki hangisi?",
-    },
-    intensity_level: 5,
-    themes: ["deep_waters", "shadow"],
-    formats: ["solo"],
-    deck_tags: ["all", "deep_waters", "shadow"],
-  },
-  {
-    id: "L5-049",
+    id: "SHADOW-09",
     text: {
       en: "What have you never told anyone because you're afraid it would make them see you as a monster?",
-      tr: "Seni canavar olarak görmelerine neden olacağından korktuğun için kimseye söylemediğin şey nedir?",
+      tr: "Seni canavar gibi görmelerine neden olacağından korktuğun için kimseye söylemediğin ne var?",
     },
     intensity_level: 5,
     themes: ["shadow", "deep_waters"],
@@ -2192,17 +964,71 @@ export const ALL_CARDS: Card[] = [
     deck_tags: ["all", "shadow", "deep_waters"],
   },
   {
-    id: "L5-050",
+    id: "SHADOW-10",
     text: {
       en: "What do you know about yourself that you hope dies with you and is never spoken of?",
-      tr: "Kendin hakkında seninle birlikte ölmesini ve asla konuşulmamasını umduğun şey nedir?",
+      tr: "Kendin hakkında seninle beraber yok olmasını ve hiç konuşulmamasını umduğun ne var?",
     },
     intensity_level: 5,
     themes: ["shadow", "deep_waters"],
     formats: ["solo"],
     deck_tags: ["all", "shadow", "deep_waters"],
+  },
+  {
+    id: "SHADOW-11",
+    text: {
+      en: "What's the deepest regret of your life so far, and what would it cost to fix it?",
+      tr: "Şimdiye kadarki en büyük pişmanlığın ne ve onu düzeltmek neye mal olurdu?",
+    },
+    intensity_level: 5,
+    themes: ["shadow", "deep_waters"],
+    formats: ["solo"],
+    deck_tags: ["all", "shadow", "deep_waters"],
+  },
+  {
+    id: "SHADOW-12",
+    text: {
+      en: "Who have you hurt that you know you can never truly make amends to?",
+      tr: "Kimin canını yaktın ki asla gerçekten telafi edemeyeceğini biliyorsun?",
+    },
+    intensity_level: 5,
+    themes: ["shadow", "love"],
+    formats: ["solo"],
+    deck_tags: ["all", "shadow", "love"],
+  },
+  {
+    id: "SHADOW-13",
+    text: {
+      en: "What's the most selfish thing you've ever done that you don't actually regret?",
+      tr: "Gerçekten pişman olmadığın, hayatında yaptığın en bencilce şey neydi?",
+    },
+    intensity_level: 5,
+    themes: ["shadow", "identity"],
+    formats: ["solo"],
+    deck_tags: ["all", "shadow", "identity"],
+  },
+  {
+    id: "SHADOW-14",
+    text: {
+      en: "What truth about yourself are you running from that you know is slowly catching up to you?",
+      tr: "Kaçtığın hangi gerçek yavaş yavaş seni yakalıyor?",
+    },
+    intensity_level: 5,
+    themes: ["shadow", "deep_waters"],
+    formats: ["solo"],
+    deck_tags: ["all", "shadow", "deep_waters"],
+  },
+  {
+    id: "SHADOW-15",
+    text: {
+      en: "If today were your last day on earth, what's the one thing you'd finally say out loud?",
+      tr: "Bugün dünyadaki son günün olsaydı, sonunda yüksek sesle söyleyeceğin tek şey ne olurdu?",
+    },
+    intensity_level: 5,
+    themes: ["deep_waters", "philosophy"],
+    formats: ["solo"],
+    deck_tags: ["all", "deep_waters", "philosophy"],
   },
 ];
 
-export const CARD_SET_VERSION = "2.0.0";
-
+export const CARD_SET_VERSION = "2.1.0";
